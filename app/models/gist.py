@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Any, cast
+from typing import Any, Optional, cast
 
 from pydantic import BaseModel, HttpUrl
 
