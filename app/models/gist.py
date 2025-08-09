@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, Any, cast
 
 from pydantic import BaseModel, HttpUrl
 
@@ -19,7 +19,7 @@ class Gist(BaseModel):
     files: list[GistFile]
 
     @staticmethod
-    def from_api(payload: dict) -> "Gist":
+    def from_api(payload: dict[str, Any]) -> "Gist":
         files = []
         for f in (payload.get("files") or {}).values():
             # Some fields can be null in GitHub API
@@ -31,9 +31,13 @@ class Gist(BaseModel):
             size = int(f.get("size") or 0)
             if raw_url:
                 files.append(GistFile(filename=filename, language=language, raw_url=raw_url, size=size))
+        # Ensure html_url is a string for type checking; fall back to a stable base if missing
+        html_val = payload.get("html_url")
+        if not isinstance(html_val, str):
+            html_val = "https://gist.github.com"
         return Gist(
             id=str(payload.get("id")),
             description=payload.get("description"),
-            html_url=payload.get("html_url"),
+            html_url=cast(HttpUrl, html_val),
             files=files,
         )
