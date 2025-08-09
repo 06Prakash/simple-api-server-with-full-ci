@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from pydantic import BaseModel
 import os
+
+from pydantic import BaseModel
 
 
 class Settings(BaseModel):

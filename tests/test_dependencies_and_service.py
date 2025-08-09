@@ -1,10 +1,9 @@
 import pytest
 import respx
-import httpx
 
 from app.api import dependencies as deps
-from app.services.github import GitHubService
 from app.config import settings
+from app.services.github import GitHubService
 
 
 def test_dependency_lazy_init_and_cache(monkeypatch):

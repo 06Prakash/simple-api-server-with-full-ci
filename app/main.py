@@ -1,7 +1,10 @@
-from fastapi import FastAPI
-from .api.routes import router
 from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
 from .api.dependencies import get_service
+from .api.routes import router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

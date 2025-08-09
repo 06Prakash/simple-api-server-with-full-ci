@@ -1,7 +1,7 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
-from ..services.github import GitHubService
 from ..models.gist import Gist
+from ..services.github import GitHubService
 from .dependencies import get_service
 
 router = APIRouter()

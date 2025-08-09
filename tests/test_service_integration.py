@@ -1,12 +1,11 @@
-import json
 from http import HTTPStatus
 
+import httpx
 import pytest
 import respx
-import httpx
 
-from app.services.github import GitHubService
 from app.config import settings
+from app.services.github import GitHubService
 
 
 @pytest.mark.asyncio
@@ -14,7 +13,6 @@ async def test_service_fetches_and_maps(monkeypatch):
     svc = GitHubService()
     base = settings.github_api_base
     user = "octocat"
-    route = f"{base}/users/{user}/gists"
     mock_data = [
         {
             "id": "1",

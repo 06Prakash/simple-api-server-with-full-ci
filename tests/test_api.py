@@ -1,9 +1,9 @@
 from fastapi.testclient import TestClient
 
+import app.api.dependencies as deps
 from app.main import app
 from app.models.gist import Gist, GistFile
 from app.services.github import GitHubService
-import app.api.dependencies as deps
 
 
 class FakeService(GitHubService):
