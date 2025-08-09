@@ -41,3 +41,9 @@ Equal Experts
 __________________________________________
 [^1]: For example Go, Python or Ruby but not Bash or Powershell.  
 [^2]: https://docs.github.com/en/rest/gists/gists?apiVersion=2022-11-28
+
+__________________________________________
+
+## How to run this solution
+
+For step-by-step setup, local run, testing, and Docker usage, see: [SETUP.md](./SETUP.md)
