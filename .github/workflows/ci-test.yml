@@ -52,7 +52,7 @@ jobs:
           id: meta
           uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
           with:
-            images: ${{ secrets.DOCKER_HUB_USERNAME }}/equal-experts-api-interview
+            images: ${{ env.DOCKER_HUB_USERNAME }}/equal-experts-api-interview
 
         - name: Build and push Docker image
           id: push
@@ -67,7 +67,7 @@ jobs:
         - name: Generate artifact attestation
           uses: actions/attest-build-provenance@v2
           with:
-            subject-name: index.docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/equal-experts-api-interview
+            subject-name: index.docker.io/${{ env.DOCKER_HUB_USERNAME }}/equal-experts-api-interview
             subject-digest: ${{ steps.push.outputs.digest }}
             push-to-registry: true
 
