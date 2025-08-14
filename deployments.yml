@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gists-api-Deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gists-api
+  template:
+    metadata:
+      labels:
+        app: gists-api
+    spec:
+      containers:
+      - name: gists-api
+        image: gists-api-image:latest
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gists-api-Service
+spec:
+  selector:
+    app: gists-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP

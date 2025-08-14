@@ -1,3 +1,5 @@
+import sys
+import types
 from fastapi.testclient import TestClient
 
 import app.api.dependencies as deps
@@ -120,3 +122,63 @@ def test_model_from_api_ignores_null_files():
     g = Gist.from_api(payload)
     # no valid files collected
     assert g.files == []
+
+def test_model_count_gist():
+    client = TestClient(app)
+    r = client.get("/octocat/count")
+    assert r.status_code == 200
+    assert r.json() == 8
+
+def test_prometheus_import_error(monkeypatch):
+    # Simulate ImportError for prometheus_fastapi_instrumentator
+    monkeypatch.setitem(sys.modules, "prometheus_fastapi_instrumentator", None)
+    # Re-import main to trigger the block
+    import importlib
+    import app.main
+    importlib.reload(app.main)
+    # If no exception, test passes
+
+def test_gist_from_api_html_url_edge_case():
+    # Line 37 in models/gist.py: fallback for html_url not being a string
+    from app.models.gist import Gist
+    payload = {
+        "id": "xyz",
+        "html_url": None,
+        "files": {}
+    }
+    g = Gist.from_api(payload)
+    assert str(g.html_url) == "https://gist.github.com/"
+def test_health_endpoint():
+    client = TestClient(app)
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+def test_router_inclusion():
+    # This test checks that the router is included and a known route is available
+    client = TestClient(app)
+    response = client.get("/favicon.ico")
+    assert response.status_code == 200
+def test_count_gists_empty_username():
+    client = TestClient(app)
+    r = client.get("//count")
+    assert r.status_code == 404
+
+def test_count_gists_user_not_found():
+    class DummyService(GitHubService):
+        async def count_user_gists(self, user: str) -> int:
+            raise GitHubService.UserNotFoundError("User 'nope' not found")
+    app.dependency_overrides[deps.get_service] = lambda: DummyService()
+    client = TestClient(app)
+    r = client.get("/nope/count")
+    assert r.status_code == 404
+    assert "not found" in r.json()["detail"].lower()
+
+def test_count_gists_downstream_error():
+    class DummyService(GitHubService):
+        async def count_user_gists(self, user: str) -> int:
+            raise GitHubService.DownstreamError("boom")
+    app.dependency_overrides[deps.get_service] = lambda: DummyService()
+    client = TestClient(app)
+    r = client.get("/octocat/count")
+    assert r.status_code == 502

@@ -1,0 +1,38 @@
+networks:
+  obs-net:
+    external: true
+
+services:
+  gists-api:
+    image: ee-gists-api:local
+    container_name: gists-api
+    networks: [obs-net]
+    ports:
+      - "8080:8080"
+    environment:
+      - REQUEST_TIMEOUT_S=10.0
+      - CACHE_TTL_S=60
+      - CACHE_MAXSIZE=512
+    depends_on:
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    networks: [obs-net]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    networks: [obs-net]
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
