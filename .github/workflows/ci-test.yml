@@ -75,13 +75,13 @@ jobs:
             kubectl get nodes
         - name: Pull image
           run: |
-           IMAGE_TAG="${{ env.DOCKER_HUB_USERNAME }}/equal-experts-api-interview"
+           IMAGE_TAG="${{ steps.meta.outputs.tags }}"
            echo "Pulling image: $IMAGE_TAG"
            minikube ssh "docker pull $IMAGE_TAG"
             
         - name: Create Kubernetes deployment
           run: |
-            IMAGE_TAG="${{ env.DOCKER_HUB_USERNAME }}/equal-experts-api-interview"
+            IMAGE_TAG="${{ steps.meta.outputs.tags }}"
             cat <<EOF | kubectl apply -f -
             apiVersion: apps/v1
             kind: Deployment
