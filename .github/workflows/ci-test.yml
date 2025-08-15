@@ -63,6 +63,99 @@ jobs:
             push: true
             tags: ${{ steps.meta.outputs.tags }}
             labels: ${{ steps.meta.outputs.labels }}
+        - name: start minikube
+          id: minikube
+          uses: medyagh/setup-minikube@latest
+          with:
+            kubernetes-version: 'latest'
+            driver: docker
+        - name: Wait for minikube to be ready
+          run: |
+            kubectl wait --for=condition=Ready --all --timeout=100s
+            kubectl get nodes
+        - name: Pull image
+          run: |
+           IMAGE_TAG="${{ env.DOCKER_HUB_USERNAME }}/equal-experts-api-interview"
+           echo "Pulling image: $IMAGE_TAG"
+           minikube ssh "docker pull $IMAGE_TAG"
+            
+        - name: Create Kubernetes deployment
+          run: |
+            IMAGE_TAG="${{ env.DOCKER_HUB_USERNAME }}/equal-experts-api-interview"
+            cat <<EOF | kubectl apply -f -
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: equal-experts-api
+              labels:
+                app: equal-experts-api
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
+                  app: equal-experts-api
+              template:
+                metadata:
+                  labels:
+                    app: equal-experts-api
+                spec:
+                  containers:
+                  - name: api
+                    image: $IMAGE_TAG
+                    ports:
+                    - containerPort: 8080
+                    env:
+                    - name: REQUEST_TIMEOUT_S
+                      value: "10.0"
+                    - name: CACHE_TTL_S
+                      value: "60"
+                    - name: CACHE_MAXSIZE
+                      value: "512"
+                    livenessProbe:
+                      httpGet:
+                        path: /health
+                        port: 8080
+                      initialDelaySeconds: 30
+                      periodSeconds: 10
+                    readinessProbe:
+                      httpGet:
+                        path: /health
+                        port: 8080
+                      initialDelaySeconds: 5
+                      periodSeconds: 5
+            EOF
 
+        - name: Create Kubernetes service
+          run: |
+            cat <<EOF | kubectl apply -f -
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: equal-experts-api-service
+            spec:
+              selector:
+                app: equal-experts-api
+              ports:
+                - protocol: TCP
+                  port: 80
+                  targetPort: 8080
+              type: NodePort
+            EOF
+
+        - name: Wait for deployment to be ready
+          run: |
+            kubectl wait --for=condition=available --timeout=300s deployment/equal-experts-api
+            kubectl get pods -l app=equal-experts-api
+
+        - name: Get service info
+          run: |
+            kubectl get service equal-experts-api-service
+            minikube service equal-experts-api-service --url
+
+        - name: Test deployment
+          run: |
+            SERVICE_URL=$(minikube service equal-experts-api-service --url)
+            echo "Testing service at: $SERVICE_URL"
+            curl -f $SERVICE_URL/health || echo "Health check failed"
 
 
