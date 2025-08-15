@@ -71,7 +71,7 @@ jobs:
             driver: docker
         - name: Wait for minikube to be ready
           run: |
-            kubectl wait --for=condition=Ready --all --timeout=100s
+            kubectl wait --for=condition=Ready nodes --all --timeout=100s
             kubectl get nodes
         - name: Pull image
           run: |
